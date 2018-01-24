@@ -1,4 +1,6 @@
 from aiohttp import web
+from functools import partial
+
 
 async def handle(request):
     name = request.match_info.get('name', "Anonymous")
@@ -11,4 +13,5 @@ app.router.add_get('/{name}', handle)
 
 
 if __name__ == '__main__':
-    web.run_app(app)
+    uprint = partial(print, flush=True)
+    web.run_app(app, print=uprint)
