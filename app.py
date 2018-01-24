@@ -1,5 +1,6 @@
-from aiohttp import web
+import os
 from functools import partial
+from aiohttp import web
 
 
 async def handle(request):
@@ -14,4 +15,5 @@ app.router.add_get('/{name}', handle)
 
 if __name__ == '__main__':
     uprint = partial(print, flush=True)
-    web.run_app(app, print=uprint)
+    port = os.environ.get('PORT', 8080)
+    web.run_app(app, print=uprint, port=port)
