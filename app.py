@@ -15,5 +15,5 @@ app.router.add_get('/{name}', handle)
 
 if __name__ == '__main__':
     uprint = partial(print, flush=True)
-    port = int(os.environ.get('PORT', 8080))a
+    port = int(os.environ.get('PORT', 8080))
     web.run_app(app, print=uprint, port=port)
