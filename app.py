@@ -1,10 +1,23 @@
 import os
 from functools import partial
-from aiohttp import web
 
 import aiohttp
+from aiohttp import web
+from slackclient import SlackClient
 
 import config
+
+
+class Notifier(object):
+    def __init__(self):
+        self.client = SlackClient(config.SLACKBOT_TOKEN)
+
+    def send_message(self, message, channel):
+        self.client.api_call(
+            "chat.postMessage",
+            channel=channel,
+            text=message
+        )
 
 
 async def index(request):
@@ -21,6 +34,8 @@ async def handle_pr_event(request):
         page_url = pr['html_url']
         user = pr['user']['login']
         if label['name'] == 'Needs review':
+            notifier = Notifier()
+            notifier.send_message('#test', 'Pr is ready for review')
             print(user, page_url)
 
     return web.Response(text='Ok')
