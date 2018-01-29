@@ -17,7 +17,7 @@ class Notifier(object):
 
     def send_message(self, message, *, channel):
         self.client.api_call(
-            "chat.postMessage",
+            'chat.postMessage',
             channel=channel,
             text=message,
             parse='full',
@@ -41,7 +41,7 @@ async def handle_pr_event(request):
         user = pr['user']['login']
         if label['name'] == 'Needs review':
             notifier = Notifier()
-            message = f'@here PR by {user} is waiting for review {page_url}'
+            message = f'@here PR by *{user}* is waiting for review {page_url}'
             notifier.send_message(message, channel='#pull-requests')
 
     return web.Response(text='Ok')
