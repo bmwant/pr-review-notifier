@@ -9,14 +9,20 @@ import config
 
 
 class Notifier(object):
+    BOT_NAME = 'gitbot'
+    BOT_ICON = ':baby_chick:'
+
     def __init__(self):
         self.client = SlackClient(config.SLACKBOT_TOKEN)
 
-    def send_message(self, message, channel):
+    def send_message(self, message, *, channel):
         self.client.api_call(
             "chat.postMessage",
             channel=channel,
-            text=message
+            text=message,
+            parse='full',
+            username=self.BOT_NAME,
+            icon_emoji=self.BOT_ICON,
         )
 
 
@@ -35,8 +41,8 @@ async def handle_pr_event(request):
         user = pr['user']['login']
         if label['name'] == 'Needs review':
             notifier = Notifier()
-            notifier.send_message('#test', 'Pr is ready for review')
-            print(user, page_url)
+            message = f'@here PR by {user} is waiting for review {page_url}'
+            notifier.send_message(message, channel='#pull-requests')
 
     return web.Response(text='Ok')
 
