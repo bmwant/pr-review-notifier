@@ -5,7 +5,7 @@ import aiohttp
 from aiohttp import web
 from slackclient import SlackClient
 
-import config_local
+import config
 
 
 class Notifier(object):
@@ -13,7 +13,7 @@ class Notifier(object):
     BOT_ICON = ':baby_chick:'
 
     def __init__(self):
-        self.client = SlackClient(config_local.SLACKBOT_TOKEN)
+        self.client = SlackClient(config.SLACKBOT_TOKEN)
 
     def send_message(self, message, *, channel):
         self.client.api_call(
@@ -50,15 +50,15 @@ async def handle_pr_event(request):
 async def accept_pr_review(request):
 
     url = '/repos/{owner}/{repo}/issues/{issue}/labels/{label}'.format(
-        owner=config_local.OWNER_NAME,
-        repo=config_local.REPO_NAME,
+        owner=config.OWNER_NAME,
+        repo=config.REPO_NAME,
         issue=4062,
         label='bug'
     )
 
     api_base = 'https://api.github.com'
 
-    endpoint = '{}{}?access_token={}'.format(api_base, url, config_local.GITHUB_ACCESS_TOKEN)
+    endpoint = '{}{}?access_token={}'.format(api_base, url, config.GITHUB_ACCESS_TOKEN)
     async with aiohttp.ClientSession() as session:
         async with session.delete(endpoint) as resp:
             print(resp.status)
