@@ -6,11 +6,12 @@ from aiohttp import web
 from slackclient import SlackClient
 
 import config
+from utils import logger
 
 
 class Notifier(object):
     BOT_NAME = 'gitbot'
-    BOT_ICON = ':baby_chick:'
+    BOT_ICON = config.DEFAULT_SLACK_ICON
 
     def __init__(self):
         self.client = SlackClient(config.SLACKBOT_TOKEN)
@@ -33,16 +34,18 @@ async def index(request):
 async def handle_pr_event(request):
     data = await request.json()
 
-    action = data['action']
+    action = data.get('action')
     if action == 'labeled':
         label = data['label']
         pr = data['pull_request']
+        title = pr['title']
         page_url = pr['html_url']
         user = pr['user']['login']
-        if label['name'] == 'Needs review':
+        if label['name'] == config.DEFAULT_LABEL_NAME:
             notifier = Notifier()
-            message = f'@here PR by *{user}* is waiting for review {page_url}'
-            notifier.send_message(message, channel='#pull-requests')
+            message = f'@here PR _{title}_ by *{user}* is waiting for review {page_url}'
+            logger.debug(f'Sending notification about {page_url}')
+            notifier.send_message(message, channel=config.DEFAULT_SLACK_CHANNEL)
 
     return web.Response(text='Ok')
 
