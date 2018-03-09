@@ -28,4 +28,4 @@ async def get_review(review_id):
     print(result)
     await cur.close()
     await conn.close()
-    return {}
+    return {'redirect_url': 'http://google.com'}

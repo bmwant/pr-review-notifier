@@ -59,14 +59,18 @@ async def handle_pr_event(request):
 
 async def accept_pr_review(request):
     review_id = request.match_info['review_id']
+
+    redirect_url = await get_review(review_id)
+    return aiohttp.web.HTTPFound(redirect_url)
+
+
+async def delete_label():
     url = 'repos/{owner}/{repo}/issues/{issue}/labels/{label}'.format(
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
         issue=4062,
         label='bug'
     )
-
-    redirect_url = await get_review(review_id)
     endpoint = '{}{}?access_token={}'.format(
         config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
@@ -81,7 +85,7 @@ async def accept_pr_review(request):
 app = web.Application()
 app.router.add_get('/', index)
 app.router.add_post('/payload', handle_pr_event)
-app.router.add_get('/accept', accept_pr_review)
+app.router.add_get('/accept/{review_id}', accept_pr_review)
 
 
 if __name__ == '__main__':

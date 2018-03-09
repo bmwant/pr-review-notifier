@@ -7,6 +7,7 @@ developers about PRs waiting for the review.
 
 Initialize your database first
 ```
+$ odbcinst -j
 $ sqlite3 database.db
 $ sqlite3 database.db < init_database.sql
 ```
