@@ -21,13 +21,13 @@ async def handle_pr_event(request):
     if action == 'labeled':
         label = data['label']
         pr = data['pull_request']
-        pr_id = pr['id']
+        issue_number = pr['number']
         title = pr['title']
         page_url = pr['html_url']
         user = pr['user']['login']
         if label['name'] == config.DEFAULT_LABEL_NAME:
             review_id = await insert_new_review(
-                pr_id=pr_id,
+                issue_number=issue_number,
                 pr_name=title,
                 pr_url=page_url,
             )
@@ -50,7 +50,7 @@ async def accept_pr_review(request):
     review = await get_review(review_id)
     pr_name = review.pr_name
     reviews_count = await update_reviews_count(review_id)
-    print(reviews_count)
+    print('Reviews count', reviews_count)
     if reviews_count == config.REQUIRED_REVIEWERS:
         logger.info(f'We have {reviews_count} review '
                     f'on pr {pr_name}, removing label')
@@ -67,7 +67,7 @@ async def delete_label():
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
         issue=4062,
-        label='bug'
+        label=config.DEFAULT_LABEL_NAME,
     )
     endpoint = '{}{}?access_token={}'.format(
         config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
