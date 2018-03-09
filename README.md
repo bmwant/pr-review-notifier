@@ -24,7 +24,18 @@ $ heroku config:set BASE_URL='https://<your-app-name>.herokuapp.com/'
 Do not forget to set env variables first in `.env` file or push them manually 
 ([link](https://devcenter.heroku.com/articles/config-vars#setting-up-config-vars-for-a-deployed-application)).
 
+### Customization
+
 Override config variables for Heroku, e.g. setting custom bot icon
 ```
 $ heroku config:set DEFAULT_SLACK_ICON=':octocat:'
+```
+
+### Troubleshouting
+
+Useful commands to figure out what's going wrong
+```
+$ heroku logs  # show process output
+$ heroku restart  # restart application on remote
+$ heroku run bash  # login to the remote shell
 ```
