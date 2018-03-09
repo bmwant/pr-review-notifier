@@ -3,6 +3,14 @@
 Elevate github webhooks and integrations with popular messengers to notify 
 developers about PRs waiting for the review.
 
+### Getting started
+
+Initialize your database first
+```
+$ sqlite3 database.db
+$ sqlite3 database.db < init_database.sql
+```
+
 ### Deploy
 
 Deploy is done with a help of Heroku.

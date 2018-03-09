@@ -9,6 +9,8 @@ name = "pypi"
 
 aiohttp = "*"
 slackclient = "*"
+sqlalchemy = "*"
+aioodbc = "*"
 
 
 [dev-packages]
