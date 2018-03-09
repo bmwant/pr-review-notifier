@@ -65,9 +65,11 @@ async def handle_pr_event(request):
 async def accept_pr_review(request):
     review_id = request.match_info['review_id']
     # logic to track pr reviews
-    redirect_url = (await get_review(review_id))['redirect_url']
+    review = await get_review(review_id)
+    if review is None:
+        return aiohttp.web.HTTPNotFound(text='No review with such id')
 
-    return aiohttp.web.HTTPFound(redirect_url)
+    return aiohttp.web.HTTPFound(review.pr_url)
 
 
 async def delete_label():
