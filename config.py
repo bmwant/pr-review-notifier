@@ -17,6 +17,7 @@ DEFAULT_SLACK_CHANNEL = '#notifications'
 DEFAULT_SLACK_BOT_NAME = 'gitbot'
 DEFAULT_SLACK_ICON = ':baby_chick:'
 
+REQUIRED_REVIEWERS = 2  # amount of required reviews for one pull request
 
 # Override values from config_local.py
 try:

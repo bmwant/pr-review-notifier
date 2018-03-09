@@ -39,3 +39,18 @@ async def get_review(review_id):
             )
             await cur.execute(query)
             return await cur.fetchone()
+
+
+async def update_reviews_count(review_id):
+    async with connect() as conn:
+        async with conn.cursor() as cur:
+            update_query = (
+                'UPDATE reviews SET count_num = count_num + 1 '
+                'WHERE id = {review_id};'.format(review_id=review_id))
+            await cur.execute(update_query)
+            select_query = (
+                'SELECT count_num FROM reviews '
+                'WHERE id = {review_id};'.format(review_id=review_id))
+            await cur.execute(select_query)
+            result = await cur.fetchone()
+            return result[0]

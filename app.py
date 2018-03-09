@@ -6,7 +6,7 @@ from aiohttp import web
 
 import config
 from utils import logger
-from database import insert_new_review, get_review
+from database import insert_new_review, get_review, update_reviews_count
 from notifier import Notifier
 
 
@@ -48,6 +48,14 @@ async def accept_pr_review(request):
     review_id = request.match_info['review_id']
     # logic to track pr reviews
     review = await get_review(review_id)
+    pr_name = review.pr_name
+    reviews_count = await update_reviews_count(review_id)
+    print(reviews_count)
+    if reviews_count == config.REQUIRED_REVIEWERS:
+        logger.info(f'We have {reviews_count} review '
+                    f'on pr {pr_name}, removing label')
+        await delete_label()
+
     if review is None:
         return aiohttp.web.HTTPNotFound(text='No review with such id')
 
