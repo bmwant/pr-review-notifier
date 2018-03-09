@@ -17,7 +17,7 @@ Deploy is done with a help of Heroku.
 Initialize remote for the first time
 ```
 $ heroku buildpacks:add --index 1 https://github.com/heroku/heroku-buildpack-apt
-$ heroku run sqlite3 database.db < init_database.sql
+$ heroku run "sqlite3 database.db < init_database.sql"
 $ heroku config:set BASE_URL='https://<your-app-name>.herokuapp.com/'
 ```
 
