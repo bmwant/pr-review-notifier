@@ -14,6 +14,7 @@ DEFAULT_LABEL_NAME = 'Needs review'
 
 SLACKBOT_TOKEN = ''  # slack token to send messages
 DEFAULT_SLACK_CHANNEL = '#notifications'
+DEFAULT_SLACK_BOT_NAME = 'gitbot'
 DEFAULT_SLACK_ICON = ':baby_chick:'
 
 

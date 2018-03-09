@@ -3,29 +3,11 @@ from functools import partial
 
 import aiohttp
 from aiohttp import web
-from slackclient import SlackClient
 
 import config
 from utils import logger
 from database import insert_new_review, get_review
-
-
-class Notifier(object):
-    BOT_NAME = 'gitbot'
-    BOT_ICON = config.DEFAULT_SLACK_ICON
-
-    def __init__(self):
-        self.client = SlackClient(config.SLACKBOT_TOKEN)
-
-    def send_message(self, message, *, channel):
-        self.client.api_call(
-            'chat.postMessage',
-            channel=channel,
-            text=message,
-            parse='full',
-            username=self.BOT_NAME,
-            icon_emoji=self.BOT_ICON,
-        )
+from notifier import Notifier
 
 
 async def index(request):
@@ -44,20 +26,20 @@ async def handle_pr_event(request):
         page_url = pr['html_url']
         user = pr['user']['login']
         if label['name'] == config.DEFAULT_LABEL_NAME:
-            review = await insert_new_review(
+            review_id = await insert_new_review(
                 pr_id=pr_id,
                 pr_name=title,
                 pr_url=page_url,
             )
             accept_url = '{base_url}accept/{review_id}'.format(
-                base_url=config.BASE_URL, review_id=review.id
+                base_url=config.BASE_URL, review_id=review_id
             )
             notifier = Notifier()
             message = (f'@here PR _{title}_ by *{user}* '
-                       f'is waiting for review {accept_url}')
+                       f'is waiting for review <{accept_url}|{page_url}>')
             logger.debug(f'Sending notification about {page_url}')
-            notifier.send_message(message,
-                                  channel=config.DEFAULT_SLACK_CHANNEL)
+            await notifier.send_message(message,
+                                        channel=config.DEFAULT_SLACK_CHANNEL)
 
     return web.Response(text='Ok')
 
