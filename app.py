@@ -46,27 +46,31 @@ async def handle_pr_event(request):
 
 async def accept_pr_review(request):
     review_id = request.match_info['review_id']
-    # logic to track pr reviews
     review = await get_review(review_id)
+    if review is None:
+        return aiohttp.web.HTTPNotFound(text='No review with such id')
+
     pr_name = review.pr_name
     reviews_count = await update_reviews_count(review_id)
-    print('Reviews count', reviews_count)
+    if reviews_count <= config.REQUIRED_REVIEWERS:
+        notifier = Notifier()
+        message = f':point_right: review of _{pr_name}_ has been started'
+        await notifier.send_message(message,
+                                    channel=config.DEFAULT_SLACK_CHANNEL)
+
     if reviews_count == config.REQUIRED_REVIEWERS:
         logger.info(f'We have {reviews_count} review '
                     f'on pr {pr_name}, removing label')
-        await delete_label()
-
-    if review is None:
-        return aiohttp.web.HTTPNotFound(text='No review with such id')
+        await delete_label(review.issue_number)
 
     return aiohttp.web.HTTPFound(review.pr_url)
 
 
-async def delete_label():
+async def delete_label(issue_number):
     url = 'repos/{owner}/{repo}/issues/{issue}/labels/{label}'.format(
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
-        issue=4062,
+        issue=issue_number,
         label=config.DEFAULT_LABEL_NAME,
     )
     endpoint = '{}{}?access_token={}'.format(
@@ -74,10 +78,13 @@ async def delete_label():
 
     async with aiohttp.ClientSession() as session:
         async with session.delete(endpoint) as resp:
-            print(resp.status)
-            print(await resp.text())
-
-    return web.Response(text='Ok')
+            if resp.status == 404:
+                logger.info('Label has been already removed')
+            elif resp.status == 200:
+                logger.debug('Label was successfully removed')
+            else:
+                message = (await resp.json())['message']
+                logger.error('Unexpected response: %s', message)
 
 
 app = web.Application()
