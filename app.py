@@ -7,6 +7,7 @@ from slackclient import SlackClient
 
 import config
 from utils import logger
+from database import insert_new_review, get_review
 
 
 class Notifier(object):
@@ -42,26 +43,33 @@ async def handle_pr_event(request):
         page_url = pr['html_url']
         user = pr['user']['login']
         if label['name'] == config.DEFAULT_LABEL_NAME:
+            review_id = await insert_new_review()
+            accept_url = '{base_url}accept/{review_id}'.format(
+                base_url=config.BASE_URL, review_id=review_id
+            )
             notifier = Notifier()
-            message = f'@here PR _{title}_ by *{user}* is waiting for review {page_url}'
+            message = (f'@here PR _{title}_ by *{user}* '
+                       f'is waiting for review {accept_url}')
             logger.debug(f'Sending notification about {page_url}')
-            notifier.send_message(message, channel=config.DEFAULT_SLACK_CHANNEL)
+            notifier.send_message(message,
+                                  channel=config.DEFAULT_SLACK_CHANNEL)
 
     return web.Response(text='Ok')
 
 
 async def accept_pr_review(request):
-
-    url = '/repos/{owner}/{repo}/issues/{issue}/labels/{label}'.format(
+    review_id = request.match_info['review_id']
+    url = 'repos/{owner}/{repo}/issues/{issue}/labels/{label}'.format(
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
         issue=4062,
         label='bug'
     )
 
-    api_base = 'https://api.github.com'
+    redirect_url = await get_review(review_id)
+    endpoint = '{}{}?access_token={}'.format(
+        config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
-    endpoint = '{}{}?access_token={}'.format(api_base, url, config.GITHUB_ACCESS_TOKEN)
     async with aiohttp.ClientSession() as session:
         async with session.delete(endpoint) as resp:
             print(resp.status)
