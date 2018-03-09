@@ -39,13 +39,18 @@ async def handle_pr_event(request):
     if action == 'labeled':
         label = data['label']
         pr = data['pull_request']
+        pr_id = pr['id']
         title = pr['title']
         page_url = pr['html_url']
         user = pr['user']['login']
         if label['name'] == config.DEFAULT_LABEL_NAME:
-            review_id = await insert_new_review()
+            review = await insert_new_review(
+                pr_id=pr_id,
+                pr_name=title,
+                pr_url=page_url,
+            )
             accept_url = '{base_url}accept/{review_id}'.format(
-                base_url=config.BASE_URL, review_id=review_id
+                base_url=config.BASE_URL, review_id=review.id
             )
             notifier = Notifier()
             message = (f'@here PR _{title}_ by *{user}* '
@@ -59,8 +64,9 @@ async def handle_pr_event(request):
 
 async def accept_pr_review(request):
     review_id = request.match_info['review_id']
+    # logic to track pr reviews
+    redirect_url = (await get_review(review_id))['redirect_url']
 
-    redirect_url = await get_review(review_id)
     return aiohttp.web.HTTPFound(redirect_url)
 
 

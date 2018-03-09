@@ -1,31 +1,41 @@
 import time
+from functools import partial
+
 import aioodbc
+
 import config
+from utils import logger
+
+
+connect = partial(aioodbc.connect, dsn=config.DSN, echo=True, autocommit=True)
 
 
 async def insert_new_review(pr_id, pr_name, pr_url):
-    conn = await aioodbc.connect(dsn=config.DSN)
-    cur = await conn.cursor()
-    date = int(time.time())
-    await cur.execute(
-        'INSERT INTO reviews(waiting_from, pr_id, pr_name, pr_url) '
-        'VALUES (?, ?, ?, ?)',
-        (date, pr_id, pr_name, pr_url)
-    )
-    await cur.execute('SELECT last_insert_rowid();')
-    result = await cur.fetchone()
-    print(result)
-    await cur.close()
-    await conn.close()
-    return 15
+    async with connect() as conn:
+        async with conn.cursor() as cur:
+            date = int(time.time())
+            query_tmpl = (
+                'INSERT INTO reviews(waiting_from, pr_id, pr_name, pr_url) '
+                'VALUES({waiting_from}, {pr_id}, "{pr_name}", "{pr_url}");'
+            )
+            query = query_tmpl.format(
+                waiting_from=date,
+                pr_id=pr_id,
+                pr_name=pr_name,
+                pr_url=pr_url,
+            )
+            logger.debug('Executing query %s', query)
+            await cur.execute(query)
+            await cur.execute('SELECT last_insert_rowid();')
+            result = await cur.fetchone()
+            return result[0]
 
 
 async def get_review(review_id):
-    conn = await aioodbc.connect(dsn=config.DSN)
-    cur = await conn.cursor()
-    await cur.execute('SELECT * FROM reviews WHERE id = ?;', (review_id,))
-    result = await cur.fetchone()
-    print(result)
-    await cur.close()
-    await conn.close()
-    return {'redirect_url': 'http://google.com'}
+    async with connect() as conn:
+        async with conn.cursor() as cur:
+            query = 'SELECT * FROM reviews WHERE id = {review_id};'.format(
+                review_id=review_id
+            )
+            await cur.execute(query)
+            return await cur.fetchone()
