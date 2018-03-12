@@ -1,7 +1,19 @@
 import time
+
+import attr
 import aiopg
 
 import config
+
+
+@attr.s
+class Review(object):
+    id = attr.ib()
+    count_value = attr.ib()
+    waiting_from = attr.ib()
+    issue_number = attr.ib()
+    pr_name = attr.ib()
+    pr_url = attr.ib()
 
 
 async def insert_new_review(issue_number, pr_name, pr_url):
@@ -25,7 +37,7 @@ async def get_review(review_id):
             async with conn.cursor() as cur:
                 query = 'SELECT * FROM reviews WHERE id = %s;'
                 await cur.execute(query, (review_id,))
-                return await cur.fetchone()
+                return Review(*(await cur.fetchone()))
 
 
 async def update_reviews_count(review_id):

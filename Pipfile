@@ -9,6 +9,7 @@ name = "pypi"
 
 aiohttp = "*"
 aiopg = "*"
+attrs = "*"
 
 
 [dev-packages]
