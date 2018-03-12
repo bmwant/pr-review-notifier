@@ -1,4 +1,5 @@
 unixodbc
 unixodbc-dev
-python3-pyodbc
+sqlite3
+libsqlite3-dev
 libsqliteodbc
