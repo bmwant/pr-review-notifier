@@ -19,6 +19,9 @@ DEFAULT_SLACK_ICON = ':baby_chick:'
 
 REQUIRED_REVIEWERS = 2  # amount of required reviews for one pull request
 
+HEALTHCHECK_ENDPOINT = ''
+HEALTHCHECK_INTERVAL = 30 * 60
+
 # Override values from config_local.py
 try:
     import config_local

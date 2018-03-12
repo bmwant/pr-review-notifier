@@ -1,4 +1,5 @@
 import os
+import asyncio
 from functools import partial
 
 import aiohttp
@@ -87,13 +88,35 @@ async def delete_label(issue_number):
                 logger.error('Unexpected response: %s', message)
 
 
-app = web.Application()
-app.router.add_get('/', index)
-app.router.add_post('/payload', handle_pr_event)
-app.router.add_get('/accept/{review_id}', accept_pr_review)
+async def healthcheck():
+    endpoint = config.HEALTHCHECK_ENDPOINT
+    if not endpoint:
+        logger.info('Healthcheck service is disabled')
+
+    while True:
+        logger.debug('Sending healthcheck...')
+        await asyncio.sleep(config.HEALTHCHECK_INTERVAL)
+
+
+def setup_healthcheck(app):
+    asyncio.Task(healthcheck())
+
+
+def setup_routes(app):
+    app.router.add_get('/', index)
+    app.router.add_post('/payload', handle_pr_event)
+    app.router.add_get('/accept/{review_id}', accept_pr_review)
+
+
+def main():
+    loop = asyncio.get_event_loop()
+    uprint = partial(print, flush=True)
+    port = int(os.environ.get('PORT', 8080))
+    app = web.Application()
+    setup_routes(app)
+    app.on_startup.append(setup_healthcheck)
+    web.run_app(app, print=uprint, port=port, loop=loop)
 
 
 if __name__ == '__main__':
-    uprint = partial(print, flush=True)
-    port = int(os.environ.get('PORT', 8080))
-    web.run_app(app, print=uprint, port=port)
+    main()
