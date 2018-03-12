@@ -5,10 +5,14 @@ developers about PRs waiting for the review.
 
 ### Getting started
 
-Initialize your database first
+Start your local PostgreSQL development database using [docker]()
 ```
-$ odbcinst -j
-$ sqlite3 database.db < init_database.sql
+$ docker run --name local-postgres -d postgres
+$ docker run -it --rm --link local-postgres:postgres postgres psql -h postgres -U postgres
+postgres=# CREATE DATABASE pr_review_notifier;
+postgres=# \q
+$ docker run -it -v $(pwd):/opt --rm --link local-postgres:postgres postgres 
+psql -h postgres -U postgres -d pr_review_notifier -f /opt/init_database.sql
 ```
 
 ### Deploy
@@ -17,7 +21,6 @@ Deploy is done with a help of Heroku.
 Initialize remote for the first time
 ```
 $ heroku buildpacks:add --index 1 https://github.com/heroku/heroku-buildpack-apt
-$ heroku run "sqlite3 database.db < init_database.sql"
 $ heroku config:set BASE_URL='https://<your-app-name>.herokuapp.com/'
 ```
 
