@@ -13,6 +13,8 @@ zlib1g
 gcc
 gcc-5
 gcc-5-base
+g++
+g++-5
 libmpfr4
 libmpfr-dev
 libmpc3
