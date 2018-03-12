@@ -1,5 +1,3 @@
 unixodbc
 unixodbc-dev
-sqlite3
-libsqlite3-dev
 libsqliteodbc
