@@ -1,7 +1,7 @@
-build-essential
 unixodbc
 unixodbc-dev
 libsqliteodbc
+build-essential
 binutils
 cpp-5
 libc6
@@ -13,6 +13,8 @@ zlib1g
 gcc
 gcc-5
 gcc-5-base
+libmpfr4
+libmpfr-dev
 libmpc3
 libgmp3-dev
 libgmp10
@@ -22,3 +24,4 @@ flex
 bison
 libisl15
 libisl-dev
+make
