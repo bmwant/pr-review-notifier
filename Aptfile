@@ -1,6 +1,6 @@
 build-essential
-gcc-6
-g++-6
+gcc-4.8
+g++-4.8
 unixodbc
 unixodbc-dev
 libsqliteodbc
