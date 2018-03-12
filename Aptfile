@@ -25,3 +25,4 @@ bison
 libisl15
 libisl-dev
 make
+python3-pyodbc
