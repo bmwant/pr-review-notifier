@@ -87,8 +87,14 @@ async def delete_label(issue_number):
                 logger.error('Unexpected response: %s', message)
 
 
+async def test(request):
+    import database
+    await database.insert_new_review(1, "Test name", "http://googl.com")
+
+
 app = web.Application()
 app.router.add_get('/', index)
+app.router.add_get('/t', test)
 app.router.add_post('/payload', handle_pr_event)
 app.router.add_get('/accept/{review_id}', accept_pr_review)
 

@@ -2,27 +2,19 @@ import time
 import aiopg
 
 import config
-from utils import logger
 
 
 async def insert_new_review(issue_number, pr_name, pr_url):
-    async with aiopg.create_pool(config.DATABASE_URL) as pool:
+    async with aiopg.create_pool(config.DATABASE_URL, echo=True) as pool:
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
                 date = int(time.time())
-                query_tmpl = (
-                    'INSERT INTO reviews(waiting_from, issue_number, pr_name, pr_url) '
-                    'VALUES({waiting_from}, {issue_number}, "{pr_name}", "{pr_url}");'
+                query = (
+                    'INSERT INTO reviews(waiting_from, issue_number, pr_name, '
+                    'pr_url) VALUES(to_timestamp(%s), %s, %s, %s) '
+                    'RETURNING id;'
                 )
-                query = query_tmpl.format(
-                    waiting_from=date,
-                    issue_number=issue_number,
-                    pr_name=pr_name,
-                    pr_url=pr_url,
-                )
-                logger.debug('Executing query %s', query)
-                await cur.execute(query)
-                await cur.execute('SELECT last_insert_rowid();')
+                await cur.execute(query, (date, issue_number, pr_name, pr_url))
                 result = await cur.fetchone()
                 return result[0]
 
@@ -31,10 +23,8 @@ async def get_review(review_id):
     async with aiopg.create_pool(config.DATABASE_URL) as pool:
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
-                query = 'SELECT * FROM reviews WHERE id = {review_id};'.format(
-                    review_id=review_id
-                )
-                await cur.execute(query)
+                query = 'SELECT * FROM reviews WHERE id = %s;'
+                await cur.execute(query, (review_id,))
                 return await cur.fetchone()
 
 
@@ -44,11 +34,13 @@ async def update_reviews_count(review_id):
             async with conn.cursor() as cur:
                 update_query = (
                     'UPDATE reviews SET count_value = count_value + 1 '
-                    'WHERE id = {review_id};'.format(review_id=review_id))
-                await cur.execute(update_query)
+                    'WHERE id = %s;'
+                )
+                await cur.execute(update_query, (review_id,))
                 select_query = (
                     'SELECT count_value FROM reviews '
-                    'WHERE id = {review_id};'.format(review_id=review_id))
-                await cur.execute(select_query)
+                    'WHERE id = %s;'
+                )
+                await cur.execute(select_query, (review_id,))
                 result = await cur.fetchone()
                 return result[0]
