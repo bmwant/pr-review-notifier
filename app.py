@@ -87,16 +87,9 @@ async def delete_label(issue_number):
                 logger.error('Unexpected response: %s', message)
 
 
-async def test(requests):
-    import database
-    await database.insert_test_record()
-    return web.Response(text='Ok')
-
-
 app = web.Application()
 app.router.add_get('/', index)
 app.router.add_post('/payload', handle_pr_event)
-app.router.add_get('/test', test)
 app.router.add_get('/accept/{review_id}', accept_pr_review)
 
 

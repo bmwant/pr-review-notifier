@@ -1,7 +1,7 @@
 import os
 
 
-DSN = 'Driver=SQLite3;Database=database.db'  # sqlite database
+DATABASE_URL = ''  # URL to your postgres database
 BASE_URL = ''  # hostname where application is deployed
 
 OWNER_NAME = ''  # github organization name
