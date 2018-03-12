@@ -22,6 +22,7 @@ psql -h postgres -U postgres -d pr_review_notifier -f /opt/init_database.sql
 Deploy is done with a help of Heroku.
 Initialize remote for the first time
 ```
+$ heroku run "psql \$DATABASE_URL -f init_database.sql"
 $ heroku config:set BASE_URL='https://<your-app-name>.herokuapp.com/'
 ```
 
