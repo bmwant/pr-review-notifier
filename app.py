@@ -1,6 +1,7 @@
 import os
 import asyncio
 from functools import partial
+from http import HTTPStatus
 
 import aiohttp
 from aiohttp import web
@@ -79,9 +80,9 @@ async def delete_label(issue_number):
 
     async with aiohttp.ClientSession() as session:
         async with session.delete(endpoint) as resp:
-            if resp.status == 404:
+            if resp.status == HTTPStatus.NOT_FOUND:
                 logger.info('Label has been already removed')
-            elif resp.status == 200:
+            elif resp.status == HTTPStatus.OK:
                 logger.debug('Label was successfully removed')
             else:
                 message = (await resp.json())['message']
@@ -95,6 +96,11 @@ async def healthcheck():
 
     while True:
         logger.debug('Sending healthcheck...')
+        async with aiohttp.ClientSession() as session:
+            async with session.get(config.HEALTHCHECK_ENDPOINT) as resp:
+                if resp.status != HTTPStatus.OK:
+                    text = await resp.text()
+                    logger.error('Request failed %s', text)
         await asyncio.sleep(config.HEALTHCHECK_INTERVAL)
 
 
