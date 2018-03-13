@@ -104,8 +104,8 @@ async def healthcheck():
         await asyncio.sleep(config.HEALTHCHECK_INTERVAL)
 
 
-def setup_healthcheck(app):
-    asyncio.Task(healthcheck())
+async def start_healthcheck(app):
+    app.loop.create_task(healthcheck())
 
 
 def setup_routes(app):
@@ -115,13 +115,12 @@ def setup_routes(app):
 
 
 def main():
-    loop = asyncio.get_event_loop()
     uprint = partial(print, flush=True)
     port = int(os.environ.get('PORT', 8080))
     app = web.Application()
     setup_routes(app)
-    app.on_startup.append(setup_healthcheck)
-    web.run_app(app, print=uprint, port=port, loop=loop)
+    app.on_startup.append(start_healthcheck)
+    web.run_app(app, print=uprint, port=port)
 
 
 if __name__ == '__main__':

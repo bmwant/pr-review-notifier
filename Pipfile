@@ -7,7 +7,7 @@ name = "pypi"
 
 [packages]
 
-aiohttp = "*"
+aiohttp = "==3.0.8"
 aiopg = "*"
 attrs = "*"
 
