@@ -12,7 +12,7 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import config
-from utils import logger
+from utils import logger, login_required
 from database import insert_new_review, get_review, update_reviews_count
 from notifier import Notifier
 
@@ -51,9 +51,13 @@ async def handle_pr_event(request):
     return web.Response(text='Ok')
 
 
-async def accept_pr_review(request):
+@login_required
+async def accept_pr_review(request, user):
     review_id = request.match_info['review_id']
     review = await get_review(review_id)
+
+    full_name = '{} {}'.format(user.first_name, user.last_name).strip()
+    username = full_name or user.username
     if review is None:
         return aiohttp.web.HTTPNotFound(text='No review with such id')
 
@@ -61,7 +65,8 @@ async def accept_pr_review(request):
     reviews_count = await update_reviews_count(review_id)
     if reviews_count <= config.REQUIRED_REVIEWERS:
         notifier = Notifier()
-        message = f':point_right: review of _{pr_name}_ has been started'
+        message = f':point_right: *{username}* started ' \
+                  f'reviewing PR _{pr_name}_'
         await notifier.send_message(message,
                                     channel=config.DEFAULT_SLACK_CHANNEL)
 
@@ -114,7 +119,6 @@ async def start_healthcheck(app):
     app.loop.create_task(healthcheck())
 
 
-# Simple Github (OAuth2) example (not connected to app)
 async def github_auth(request):
     github = GithubClient(
         client_id=config.GITHUB_CLIENT_ID,
@@ -123,19 +127,12 @@ async def github_auth(request):
     if 'code' not in request.query:
         return web.HTTPFound(github.get_authorize_url(scope='user:email'))
 
-    # Get access token
     code = request.query['code']
     token, _ = await github.get_access_token(code)
 
-    # response = yield from github.request('GET', 'user')
-    # user_info = yield from response.json()
-    # Get a resource `https://api.github.com/user`
-    response = await github.request('GET', 'user')
-    login = response['login']
-    name = response['name']
-
-    text = f'User {login} is {name}'
-    return web.Response(text=text)
+    session = await aiohttp_session.get_session(request)
+    session['token'] = token
+    return web.HTTPFound('/')
 
 
 def setup_routes(app):
