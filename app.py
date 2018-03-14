@@ -124,15 +124,20 @@ async def github_auth(request):
         client_id=config.GITHUB_CLIENT_ID,
         client_secret=config.GITHUB_CLIENT_SECRET,
     )
+    session = await aiohttp_session.get_session(request)
+
     if 'code' not in request.query:
+        redirect_uri = request.query.get('redirect_uri', '/')
+        session['redirect_uri'] = redirect_uri
         return web.HTTPFound(github.get_authorize_url(scope='user:email'))
 
     code = request.query['code']
     token, _ = await github.get_access_token(code)
 
-    session = await aiohttp_session.get_session(request)
     session['token'] = token
-    return web.HTTPFound('/')
+    next_uri = session.pop('redirect_uri', '/')
+    logger.debug('Redirecting back to %s', next_uri)
+    return web.HTTPFound(next_uri)
 
 
 def setup_routes(app):

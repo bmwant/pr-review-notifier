@@ -20,7 +20,7 @@ def login_required(fn):
         session = await get_session(request)
 
         if 'token' not in session:
-            return web.HTTPFound('/auth')
+            return web.HTTPFound('/auth?redirect_uri={}'.format(request.url))
 
         github = GithubClient(
             client_id=config.GITHUB_CLIENT_ID,
@@ -28,7 +28,6 @@ def login_required(fn):
             access_token=session['token']
         )
         user, info = await github.user_info()
-        logger.info('user %s %s', user, info)
 
         return await fn(request, user, **kwargs)
 
