@@ -1,10 +1,15 @@
 import os
 import asyncio
+import base64
 from functools import partial
 from http import HTTPStatus
 
 import aiohttp
+import aiohttp_session
 from aiohttp import web
+from aioauth_client import GithubClient
+from aiohttp_session.cookie_storage import EncryptedCookieStorage
+from cryptography import fernet
 
 import config
 from utils import logger
@@ -93,6 +98,7 @@ async def healthcheck():
     endpoint = config.HEALTHCHECK_ENDPOINT
     if not endpoint:
         logger.info('Healthcheck service is disabled')
+        return
 
     while True:
         logger.debug('Sending healthcheck...')
@@ -108,8 +114,33 @@ async def start_healthcheck(app):
     app.loop.create_task(healthcheck())
 
 
+# Simple Github (OAuth2) example (not connected to app)
+async def github_auth(request):
+    github = GithubClient(
+        client_id=config.GITHUB_CLIENT_ID,
+        client_secret=config.GITHUB_CLIENT_SECRET,
+    )
+    if 'code' not in request.query:
+        return web.HTTPFound(github.get_authorize_url(scope='user:email'))
+
+    # Get access token
+    code = request.query['code']
+    token, _ = await github.get_access_token(code)
+
+    # response = yield from github.request('GET', 'user')
+    # user_info = yield from response.json()
+    # Get a resource `https://api.github.com/user`
+    response = await github.request('GET', 'user')
+    login = response['login']
+    name = response['name']
+
+    text = f'User {login} is {name}'
+    return web.Response(text=text)
+
+
 def setup_routes(app):
     app.router.add_get('/', index)
+    app.router.add_get('/auth', github_auth)
     app.router.add_post('/payload', handle_pr_event)
     app.router.add_get('/accept/{review_id}', accept_pr_review)
 
@@ -118,6 +149,9 @@ def main():
     uprint = partial(print, flush=True)
     port = int(os.environ.get('PORT', 8080))
     app = web.Application()
+    fernet_key = fernet.Fernet.generate_key()
+    secret_key = base64.urlsafe_b64decode(fernet_key)
+    aiohttp_session.setup(app, EncryptedCookieStorage(secret_key))
     setup_routes(app)
     app.on_startup.append(start_healthcheck)
     web.run_app(app, print=uprint, port=port)

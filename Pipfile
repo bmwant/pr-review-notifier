@@ -10,6 +10,9 @@ name = "pypi"
 aiohttp = "==3.0.8"
 aiopg = "*"
 attrs = "*"
+aioauth-client = "*"
+aiohttp-session = "*"
+cryptography = "*"
 
 
 [dev-packages]

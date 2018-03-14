@@ -9,6 +9,8 @@ REPO_NAME = ''  # github repository name
 
 GITHUB_API_BASE = 'https://api.github.com/'
 GITHUB_ACCESS_TOKEN = ''  # github token to access api
+GITHUB_CLIENT_ID = ''
+GITHUB_CLIENT_SECRET = ''
 
 DEFAULT_LABEL_NAME = 'Needs review'
 
