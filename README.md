@@ -36,6 +36,8 @@ Initialize remote for the first time
 ```
 $ heroku run "psql \$DATABASE_URL -f init_database.sql"
 $ heroku config:set BASE_URL='https://<your-app-name>.herokuapp.com/'
+$ heroku config:set GITHUB_CLIENT_ID='<your-client-id>'
+$ heroku config:set GITHUB_CLIENT_SECRET='<your-client-secret>'
 ```
 
 Do not forget to set env variables first in `.env` file or push them manually 
