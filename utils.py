@@ -19,15 +19,16 @@ def login_required(fn):
     async def wrapped(request, **kwargs):
         session = await get_session(request)
 
-        github = GithubClient(
-            client_id=config.GITHUB_CLIENT_ID,
-            client_secret=config.GITHUB_CLIENT_SECRET,
-        )
-
         if 'token' not in session:
             return web.HTTPFound('/auth')
 
+        github = GithubClient(
+            client_id=config.GITHUB_CLIENT_ID,
+            client_secret=config.GITHUB_CLIENT_SECRET,
+            access_token=session['token']
+        )
         user, info = await github.user_info()
+        logger.info('user %s %s', user, info)
 
         return await fn(request, user, **kwargs)
 

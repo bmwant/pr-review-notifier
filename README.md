@@ -8,14 +8,26 @@ developers about PRs waiting for the review.
 Start your local PostgreSQL development database using 
 [docker](https://www.docker.com/)
 ```
-$ docker run --name local-postgres -d postgres
-$ docker run -it --rm --link local-postgres:postgres postgres 
+$ docker volume create pgdata
+$ docker run --name local-postgres -v pgdata:/var/lib/postgresql/data \
+-d postgres
+$ docker run -it --rm --link local-postgres:postgres postgres \
 psql -h postgres -U postgres
 postgres=# CREATE DATABASE pr_review_notifier;
 postgres=# \q
-$ docker run -it -v $(pwd):/opt --rm --link local-postgres:postgres postgres 
+$ docker run -it -v $(pwd):/opt --rm --link local-postgres:postgres postgres \
 psql -h postgres -U postgres -d pr_review_notifier -f /opt/init_database.sql
 ```
+
+### Testing
+
+You can simulate requests from github via this command
+```
+$ curl -v -H "Content-Type: application/json" -X POST \
+--data @test_payload.json http://localhost:8080/payload
+```
+
+for testing purposes.
 
 ### Deploy
 

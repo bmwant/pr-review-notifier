@@ -37,7 +37,9 @@ async def get_review(review_id):
             async with conn.cursor() as cur:
                 query = 'SELECT * FROM reviews WHERE id = %s;'
                 await cur.execute(query, (review_id,))
-                return Review(*(await cur.fetchone()))
+                result = await cur.fetchone()
+                if result is not None:
+                    return Review(*result)
 
 
 async def update_reviews_count(review_id):
