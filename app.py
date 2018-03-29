@@ -13,7 +13,12 @@ from cryptography import fernet
 
 import config
 from utils import logger, login_required
-from database import insert_new_review, get_review, update_reviews_count
+from database import (
+    insert_new_review,
+    update_reviews_count,
+    get_review_by_id,
+    get_review_by_issue_number,
+)
 from notifier import Notifier
 
 
@@ -21,60 +26,82 @@ async def index(request):
     return web.Response(text='PR review notifier')
 
 
+async def _handle_labeled(data):
+    label = data['label']
+    pr = data['pull_request']
+    issue_number = pr['number']
+    title = pr['title']
+    page_url = pr['html_url']
+    user = pr['user']['login']
+    if label['name'] == config.DEFAULT_LABEL_NAME:
+        review_id = await insert_new_review(
+            issue_number=issue_number,
+            pr_name=title,
+            pr_url=page_url,
+        )
+        accept_url = '{base_url}accept/{review_id}'.format(
+            base_url=config.BASE_URL, review_id=review_id
+        )
+        notifier = Notifier()
+        message = (f'@here PR _{title}_ by *{user}* '
+                   f'is waiting for review <{accept_url}|{page_url}>')
+        logger.debug(f'Sending notification about {page_url}')
+        await notifier.send_message(message,
+                                    channel=config.DEFAULT_SLACK_CHANNEL)
+
+
+async def _handle_reviewed(data):
+    state = data['review']['state']
+    issue_number = data['pull_request']['number']
+    if state == 'approved':
+        review = await get_review_by_issue_number(issue_number)
+        if review is None:
+            logger.error('Got approve but PR is not in the database, '
+                         'probably label was missing')
+            return
+
+        reviews_count = await update_reviews_count(review.id)
+        pr_name = review.pr_name
+        if reviews_count == config.REQUIRED_APPROVES:
+            logger.info(f'We have {reviews_count} approves '
+                        f'for pr {pr_name}, removing label')
+            await delete_label(review.issue_number)
+            notifier = Notifier()
+            message = f':green_check_mark: PR _{pr_name}_ has ' \
+                      f'{reviews_count} approves and can be merged!'
+            await notifier.send_message(
+                message, channel=config.DEFAULT_SLACK_CHANNEL)
+
+
 async def handle_pr_event(request):
     data = await request.json()
 
     action = data.get('action')
     if action == 'labeled':
-        label = data['label']
-        pr = data['pull_request']
-        issue_number = pr['number']
-        title = pr['title']
-        page_url = pr['html_url']
-        user = pr['user']['login']
-        if label['name'] == config.DEFAULT_LABEL_NAME:
-            review_id = await insert_new_review(
-                issue_number=issue_number,
-                pr_name=title,
-                pr_url=page_url,
-            )
-            accept_url = '{base_url}accept/{review_id}'.format(
-                base_url=config.BASE_URL, review_id=review_id
-            )
-            notifier = Notifier()
-            message = (f'@here PR _{title}_ by *{user}* '
-                       f'is waiting for review <{accept_url}|{page_url}>')
-            logger.debug(f'Sending notification about {page_url}')
-            await notifier.send_message(message,
-                                        channel=config.DEFAULT_SLACK_CHANNEL)
+        await _handle_labeled(data)
+    elif action == 'submitted':
+        await _handle_reviewed(data)
+    else:
+        logger.debug(f'Unknown action {action}')
 
     return web.Response(text='Ok')
 
 
 @login_required
 async def accept_pr_review(request, user):
+    """
+    Does not do anything. You can add custom tracking logic here.
+    """
     review_id = request.match_info['review_id']
-    review = await get_review(review_id)
+    review = await get_review_by_id(review_id)
+    if review is None:
+        logger.error(f'Requesting review with id {review_id}')
+        return aiohttp.web.HTTPNotFound(text='No review with such id')
 
     full_name = '{} {}'.format(user.first_name, user.last_name).strip()
     username = full_name or user.username
-    if review is None:
-        return aiohttp.web.HTTPNotFound(text='No review with such id')
-
     pr_name = review.pr_name
-    reviews_count = await update_reviews_count(review_id)
-    if reviews_count <= config.REQUIRED_REVIEWERS:
-        notifier = Notifier()
-        message = f':point_right: *{username}* started ' \
-                  f'reviewing PR _{pr_name}_'
-        await notifier.send_message(message,
-                                    channel=config.DEFAULT_SLACK_CHANNEL)
-
-    if reviews_count == config.REQUIRED_REVIEWERS:
-        logger.info(f'We have {reviews_count} review '
-                    f'on pr {pr_name}, removing label')
-        await delete_label(review.issue_number)
-
+    logger.debug(f'{username} clicked on link to PR {pr_name}')
     return aiohttp.web.HTTPFound(review.pr_url)
 
 

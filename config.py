@@ -19,7 +19,7 @@ DEFAULT_SLACK_CHANNEL = '#notifications'
 DEFAULT_SLACK_BOT_NAME = 'gitbot'
 DEFAULT_SLACK_ICON = ':baby_chick:'
 
-REQUIRED_REVIEWERS = 2  # amount of required reviews for one pull request
+REQUIRED_APPROVES = 2  # amount of approved reviews for one pull request
 
 HEALTHCHECK_ENDPOINT = ''
 HEALTHCHECK_INTERVAL = 30 * 60

@@ -31,12 +31,23 @@ async def insert_new_review(issue_number, pr_name, pr_url):
                 return result[0]
 
 
-async def get_review(review_id):
+async def get_review_by_id(review_id):
     async with aiopg.create_pool(config.DATABASE_URL) as pool:
         async with pool.acquire() as conn:
             async with conn.cursor() as cur:
                 query = 'SELECT * FROM reviews WHERE id = %s;'
                 await cur.execute(query, (review_id,))
+                result = await cur.fetchone()
+                if result is not None:
+                    return Review(*result)
+
+
+async def get_review_by_issue_number(issue_number):
+    async with aiopg.create_pool(config.DATABASE_URL) as pool:
+        async with pool.acquire() as conn:
+            async with conn.cursor() as cur:
+                query = 'SELECT * FROM reviews WHERE issue_number = %s;'
+                await cur.execute(query, (issue_number,))
                 result = await cur.fetchone()
                 if result is not None:
                     return Review(*result)
