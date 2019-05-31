@@ -50,7 +50,7 @@ Override config variables for Heroku, e.g. setting custom bot icon
 $ heroku config:set DEFAULT_SLACK_ICON=':octocat:'
 ```
 
-### Troubleshouting
+### Troubleshooting
 
 Useful commands to figure out what's going wrong
 ```
