@@ -12,7 +12,7 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import config
-from utils import logger, login_required
+from utils import logger
 from database import (
     insert_new_review,
     update_reviews_count,
@@ -39,12 +39,9 @@ async def _handle_labeled(data):
             pr_name=title,
             pr_url=page_url,
         )
-        accept_url = '{base_url}accept/{review_id}'.format(
-            base_url=config.BASE_URL, review_id=review_id
-        )
         notifier = Notifier()
         message = (f'@here PR _{title}_ by *{user}* '
-                   f'is waiting for review <{accept_url}|{page_url}>')
+                   f'is waiting for review <{page_url}>')
         logger.debug(f'Sending notification about {page_url}')
         await notifier.send_message(message,
                                     channel=config.DEFAULT_SLACK_CHANNEL)
@@ -85,24 +82,6 @@ async def handle_pr_event(request):
         logger.debug(f'Unknown action {action}')
 
     return web.Response(text='Ok')
-
-
-@login_required
-async def accept_pr_review(request, user):
-    """
-    Does not do anything. You can add custom tracking logic here.
-    """
-    review_id = request.match_info['review_id']
-    review = await get_review_by_id(review_id)
-    if review is None:
-        logger.error(f'Requesting review with id {review_id}')
-        return aiohttp.web.HTTPNotFound(text='No review with such id')
-
-    full_name = '{} {}'.format(user.first_name, user.last_name).strip()
-    username = full_name or user.username
-    pr_name = review.pr_name
-    logger.debug(f'{username} clicked on link to PR {pr_name}')
-    return aiohttp.web.HTTPFound(review.pr_url)
 
 
 async def delete_label(issue_number):
@@ -171,7 +150,6 @@ def setup_routes(app):
     app.router.add_get('/', index)
     app.router.add_get('/auth', github_auth)
     app.router.add_post('/payload', handle_pr_event)
-    app.router.add_get('/accept/{review_id}', accept_pr_review)
 
 
 def main():
