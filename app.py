@@ -12,11 +12,9 @@ from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
 import config
-from utils import logger, login_required
+from utils import logger
 from database import (
-    insert_new_review,
     update_reviews_count,
-    get_review_by_id,
     get_review_by_issue_number,
 )
 from notifier import Notifier
@@ -34,17 +32,9 @@ async def _handle_labeled(data):
     page_url = pr['html_url']
     user = pr['user']['login']
     if label['name'] == config.DEFAULT_LABEL_NAME:
-        review_id = await insert_new_review(
-            issue_number=issue_number,
-            pr_name=title,
-            pr_url=page_url,
-        )
-        accept_url = '{base_url}accept/{review_id}'.format(
-            base_url=config.BASE_URL, review_id=review_id
-        )
         notifier = Notifier()
         message = (f'@here PR _{title}_ by *{user}* '
-                   f'is waiting for review <{accept_url}|{page_url}>')
+                   f'is waiting for review <{page_url}>')
         logger.debug(f'Sending notification about {page_url}')
         await notifier.send_message(message,
                                     channel=config.DEFAULT_SLACK_CHANNEL)
@@ -75,7 +65,6 @@ async def _handle_reviewed(data):
 
 async def handle_pr_event(request):
     data = await request.json()
-
     action = data.get('action')
     if action == 'labeled':
         await _handle_labeled(data)
@@ -87,22 +76,33 @@ async def handle_pr_event(request):
     return web.Response(text='Ok')
 
 
-@login_required
-async def accept_pr_review(request, user):
-    """
-    Does not do anything. You can add custom tracking logic here.
-    """
-    review_id = request.match_info['review_id']
-    review = await get_review_by_id(review_id)
-    if review is None:
-        logger.error(f'Requesting review with id {review_id}')
-        return aiohttp.web.HTTPNotFound(text='No review with such id')
+async def is_pr_mergeable(pr_number: int):
+    url = 'repos/{owner}/{repo}/pulls/{pull_number}'.format(
+        owner=config.OWNER_NAME,
+        repo=config.REPO_NAME,
+        pull_number=pr_number,
+    )
+    endpoint = '{}{}?access_token={}'.format(
+        config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
-    full_name = '{} {}'.format(user.first_name, user.last_name).strip()
-    username = full_name or user.username
-    pr_name = review.pr_name
-    logger.debug(f'{username} clicked on link to PR {pr_name}')
-    return aiohttp.web.HTTPFound(review.pr_url)
+    async with aiohttp.ClientSession() as session:
+        async with session.get(endpoint) as resp:
+            pr_data = await resp.json()
+            return pr_data['mergeable']
+
+
+async def get_pr_reviews(pr_number: int):
+    url = 'repos/{owner}/{repo}/pulls/{pull_number}/reviews'.format(
+        owner=config.OWNER_NAME,
+        repo=config.REPO_NAME,
+        pull_number=pr_number,
+    )
+    endpoint = '{}{}?access_token={}'.format(
+        config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(endpoint) as resp:
+            pr_data = await resp.json()
 
 
 async def delete_label(issue_number):
@@ -171,7 +171,6 @@ def setup_routes(app):
     app.router.add_get('/', index)
     app.router.add_get('/auth', github_auth)
     app.router.add_post('/payload', handle_pr_event)
-    app.router.add_get('/accept/{review_id}', accept_pr_review)
 
 
 def main():

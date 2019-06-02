@@ -24,7 +24,7 @@ psql -h postgres -U postgres -d pr_review_notifier -f /opt/init_database.sql
 You can simulate requests from github via this command
 ```
 $ curl -v -H "Content-Type: application/json" -X POST \
---data @test_payload.json http://localhost:8080/payload
+--data @test/test_labeled.json http://localhost:8080/payload
 ```
 
 for testing purposes.
@@ -50,7 +50,7 @@ Override config variables for Heroku, e.g. setting custom bot icon
 $ heroku config:set DEFAULT_SLACK_ICON=':octocat:'
 ```
 
-### Troubleshouting
+### Troubleshooting
 
 Useful commands to figure out what's going wrong
 ```
