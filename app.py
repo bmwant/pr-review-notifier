@@ -40,15 +40,14 @@ async def _handle_reviewed(data):
     state = data['review']['state']
     issue_number = data['pull_request']['number']
     if state == 'approved':
-
-        pr_name = ''
-        pr_ready_to_merge = await is_pr_approved(issue_number)
+        pr_title = data['pull_request']['title']
+        pr_ready_to_merge = await is_pr_approved(pr_title)
         if pr_ready_to_merge:
             logger.info(f'We have {config.REQUIRED_APPROVES} approves '
-                        f'for pr {pr_name}, removing label')
+                        f'for pr {pr_title}, removing label')
             await delete_label(issue_number)
             notifier = Notifier()
-            message = f':green_check_mark: PR _{pr_name}_ has ' \
+            message = f':green_check_mark: PR _{pr_title}_ has ' \
                       f'{config.REQUIRED_APPROVES} approves and can be merged!'
             await notifier.send_message(
                 message, channel=config.DEFAULT_SLACK_CHANNEL)
@@ -67,19 +66,23 @@ async def handle_pr_event(request):
     return web.Response(text='Ok')
 
 
-async def is_pr_approved(pr_number: int):
-    url = 'repos/{owner}/{repo}/pulls/{pull_number}'.format(
+async def is_pr_approved(pr_title: str) -> bool:
+    url = (
+        'search/issues?'
+        'q={title}+repo:{owner}/{repo}+is:pr+is:open+review:approved'
+    ).format(
+        title=pr_title,
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
-        pull_number=pr_number,
     )
-    endpoint = '{}{}?access_token={}'.format(
+    endpoint = '{}{}&access_token={}'.format(
         config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
+    logger.debug(f'Checking if {pr_title} is approved')
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as resp:
-            pr_data = await resp.json()
-            return pr_data['mergeable']
+            response = await resp.json()
+            return bool(response['total_count'])
 
 
 async def delete_label(issue_number):
