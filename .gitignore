@@ -104,4 +104,3 @@ venv.bak/
 .idea/
 config_local.py
 database.db
-requirements.txt
