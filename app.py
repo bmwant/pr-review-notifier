@@ -78,7 +78,7 @@ async def is_pr_approved(pr_title: str) -> bool:
     endpoint = '{}{}&access_token={}'.format(
         config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
-    logger.debug(f'Checking if {pr_title} is approved')
+    logger.debug(f'Checking if {pr_title} is approved: {url}')
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as resp:
             response = await resp.json()
