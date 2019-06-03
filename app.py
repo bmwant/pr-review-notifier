@@ -13,10 +13,6 @@ from cryptography import fernet
 
 import config
 from utils import logger
-from database import (
-    update_reviews_count,
-    get_review_by_issue_number,
-)
 from notifier import Notifier
 
 
@@ -44,21 +40,15 @@ async def _handle_reviewed(data):
     state = data['review']['state']
     issue_number = data['pull_request']['number']
     if state == 'approved':
-        review = await get_review_by_issue_number(issue_number)
-        if review is None:
-            logger.error('Got approve but PR is not in the database, '
-                         'probably label was missing')
-            return
-
-        reviews_count = await update_reviews_count(review.id)
-        pr_name = review.pr_name
-        if reviews_count == config.REQUIRED_APPROVES:
-            logger.info(f'We have {reviews_count} approves '
-                        f'for pr {pr_name}, removing label')
-            await delete_label(review.issue_number)
+        pr_title = data['pull_request']['title']
+        pr_ready_to_merge = await is_pr_approved(pr_title)
+        if pr_ready_to_merge:
+            logger.info(f'We have {config.REQUIRED_APPROVES} approves '
+                        f'for pr {pr_title}, removing label')
+            await delete_label(issue_number)
             notifier = Notifier()
-            message = f':green_check_mark: PR _{pr_name}_ has ' \
-                      f'{reviews_count} approves and can be merged!'
+            message = f':green_check_mark: PR _{pr_title}_ has ' \
+                      f'{config.REQUIRED_APPROVES} approves and can be merged!'
             await notifier.send_message(
                 message, channel=config.DEFAULT_SLACK_CHANNEL)
 
@@ -76,33 +66,23 @@ async def handle_pr_event(request):
     return web.Response(text='Ok')
 
 
-async def is_pr_mergeable(pr_number: int):
-    url = 'repos/{owner}/{repo}/pulls/{pull_number}'.format(
+async def is_pr_approved(pr_title: str) -> bool:
+    url = (
+        'search/issues?'
+        'q={title}+repo:{owner}/{repo}+is:pr+is:open+review:approved'
+    ).format(
+        title=pr_title,
         owner=config.OWNER_NAME,
         repo=config.REPO_NAME,
-        pull_number=pr_number,
     )
-    endpoint = '{}{}?access_token={}'.format(
+    endpoint = '{}{}&access_token={}'.format(
         config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
 
+    logger.debug(f'Checking if {pr_title} is approved')
     async with aiohttp.ClientSession() as session:
         async with session.get(endpoint) as resp:
-            pr_data = await resp.json()
-            return pr_data['mergeable']
-
-
-async def get_pr_reviews(pr_number: int):
-    url = 'repos/{owner}/{repo}/pulls/{pull_number}/reviews'.format(
-        owner=config.OWNER_NAME,
-        repo=config.REPO_NAME,
-        pull_number=pr_number,
-    )
-    endpoint = '{}{}?access_token={}'.format(
-        config.GITHUB_API_BASE, url, config.GITHUB_ACCESS_TOKEN)
-
-    async with aiohttp.ClientSession() as session:
-        async with session.get(endpoint) as resp:
-            pr_data = await resp.json()
+            response = await resp.json()
+            return bool(response['total_count'])
 
 
 async def delete_label(issue_number):
@@ -143,7 +123,7 @@ async def healthcheck():
 
 
 async def start_healthcheck(app):
-    app.loop.create_task(healthcheck())
+    asyncio.create_task(healthcheck())
 
 
 async def github_auth(request):
