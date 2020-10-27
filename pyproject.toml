@@ -12,7 +12,7 @@ aiopg = "^0.16.0"
 attrs = "^19.1"
 aioauth-client = "^0.16.2"
 aiohttp-session = "^2.7"
-cryptography = "^2.7"
+cryptography = "^3.2"
 
 [tool.poetry.dev-dependencies]
 
