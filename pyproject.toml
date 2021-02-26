@@ -7,7 +7,7 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-aiohttp = "^3.5"
+aiohttp = "^3.7"
 aiopg = "^0.16.0"
 attrs = "^19.1"
 aioauth-client = "^0.16.2"
