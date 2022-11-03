@@ -7,12 +7,12 @@ license = "MIT"
 
 [tool.poetry.dependencies]
 python = "^3.7"
-aiohttp = "^3.5"
-aiopg = "^0.16.0"
+# aiopg = "^0.16.0"
 attrs = "^19.1"
 aioauth-client = "^0.16.2"
 aiohttp-session = "^2.7"
 cryptography = "^2.7"
+aiohttp = "^3.8.3"
 
 [tool.poetry.dev-dependencies]
 
