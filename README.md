@@ -2,17 +2,15 @@
 
 ![octobot](icon.png)
 
-Elevate github webhooks and integrations with popular messengers to notify 
-developers about PRs waiting for the review.
+Elevate github webhooks and integrations with popular messengers to notify developers about PRs waiting for the review.
 
 ### Testing
 
-Create `config_local.py` with settings overrides, install dependencies and run 
-app via
+Create `config_local.py` with settings overrides, install dependencies and run app via
 
 ```bash
 $ poetry install
-$ poetry run python app.py
+$ poetry run python -m app
 ```
 
 You can simulate requests from github like this
