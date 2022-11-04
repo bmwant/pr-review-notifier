@@ -51,6 +51,17 @@ pynacl = ["pynacl"]
 secure = ["cryptography"]
 
 [[package]]
+name = "aiohttp-wsgi"
+version = "0.10.0"
+description = "WSGI adapter for aiohttp."
+category = "main"
+optional = false
+python-versions = "*"
+
+[package.dependencies]
+aiohttp = ">=3.4,<4"
+
+[[package]]
 name = "aiosignal"
 version = "1.2.0"
 description = "aiosignal: a list of registered asynchronous callbacks"
@@ -578,7 +589,7 @@ testing = ["flake8 (<5)", "func-timeout", "jaraco.functools", "jaraco.itertools"
 [metadata]
 lock-version = "1.1"
 python-versions = ">=3.7,<3.10"
-content-hash = "f46c2b012b9b5dcb45bf581cda6cceefee28750db654da7544ec8904096ee1da"
+content-hash = "b777d0a0fb16ff296acefa505c7a6b4f422cb5ed6854f6bbea523a4e9abae421"
 
 [metadata.files]
 aioauth-client = [
@@ -677,6 +688,10 @@ aiohttp = [
 aiohttp-session = [
     {file = "aiohttp-session-2.12.0.tar.gz", hash = "sha256:0ccd11a7c77cb9e5a61f4daacdc9170d561112f9cfaf9e9a2d9867c0587d1950"},
     {file = "aiohttp_session-2.12.0-py3-none-any.whl", hash = "sha256:f0bf0caa2f5b5a56cb50a45f98d61f60d8523322099a2857410530149706f5e5"},
+]
+aiohttp-wsgi = [
+    {file = "aiohttp-wsgi-0.10.0.tar.gz", hash = "sha256:bc4dfabb56eadbe53662b2f13c2309350bd17e282ca4250301012adb65b84f49"},
+    {file = "aiohttp_wsgi-0.10.0-py3-none-any.whl", hash = "sha256:e10da72eb430cbfd5cd5a90f49c244859c52a20619fa548aea2f64d8bf197fd7"},
 ]
 aiosignal = [
     {file = "aiosignal-1.2.0-py3-none-any.whl", hash = "sha256:26e62109036cd181df6e6ad646f91f0dcfd05fe16d0cb924138ff2ab75d64e3a"},

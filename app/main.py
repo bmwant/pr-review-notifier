@@ -153,15 +153,20 @@ def setup_routes(app):
     app.router.add_post('/payload', handle_pr_event)
 
 
-def run_app():
-    uprint = partial(print, flush=True)
-    port = int(os.environ.get('PORT', 8080))
+def create_app():
     app = web.Application()
     fernet_key = fernet.Fernet.generate_key()
     secret_key = base64.urlsafe_b64decode(fernet_key)
     aiohttp_session.setup(app, EncryptedCookieStorage(secret_key))
     setup_routes(app)
     app.on_startup.append(start_healthcheck)
+    return app
+
+
+def run_app(*args, **kwargs):
+    uprint = partial(print, flush=True)
+    port = int(os.environ.get('PORT', 8080))
+    app = create_app()
     web.run_app(app, print=uprint, port=port)
 
 

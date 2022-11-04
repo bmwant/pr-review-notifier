@@ -9,7 +9,7 @@ Elevate github webhooks and integrations with popular messengers to notify devel
 Create `config_local.py` with settings overrides, install dependencies and run app via
 
 ```bash
-$ poetry install
+$ make install
 $ poetry run python -m app
 ```
 
@@ -30,3 +30,6 @@ $ curl -v -H "Content-Type: application/json" \
 ```
 
 ### Deploy
+
+* [deployment to AWS Lambda](./deploy_lambda.md)
+* [Deployment to Heroku](./deploy_heroku.md)
