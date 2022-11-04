@@ -4,7 +4,7 @@ from aiohttp import web
 from aiohttp_session import get_session
 from aioauth_client import GithubClient
 
-import config
+from app import config
 
 
 logger = logging.getLogger(__name__)

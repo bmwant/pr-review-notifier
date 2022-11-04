@@ -1,5 +1,6 @@
 import aiohttp
-import config
+
+from app import config
 
 
 class Notifier(object):

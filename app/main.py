@@ -11,9 +11,9 @@ from aioauth_client import GithubClient
 from aiohttp_session.cookie_storage import EncryptedCookieStorage
 from cryptography import fernet
 
-import config
-from utils import logger
-from notifier import Notifier
+from app import config
+from app.utils import logger
+from app.notifier import Notifier
 
 
 async def index(request):
@@ -153,7 +153,7 @@ def setup_routes(app):
     app.router.add_post('/payload', handle_pr_event)
 
 
-def main():
+def run_app():
     uprint = partial(print, flush=True)
     port = int(os.environ.get('PORT', 8080))
     app = web.Application()
@@ -165,5 +165,4 @@ def main():
     web.run_app(app, print=uprint, port=port)
 
 
-if __name__ == '__main__':
-    main()
+
