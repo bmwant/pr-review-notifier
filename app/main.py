@@ -165,9 +165,10 @@ def create_app():
 
 def run_app(*args, **kwargs):
     uprint = partial(print, flush=True)
+    host = os.environ.get("HOST", "127.0.0.1")
     port = int(os.environ.get('PORT', 8080))
     app = create_app()
-    web.run_app(app, print=uprint, port=port)
+    web.run_app(app, print=uprint, host=host, port=port)
 
 
 
