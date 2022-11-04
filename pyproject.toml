@@ -6,7 +6,7 @@ authors = ["Misha Behersky <bmwant@gmail.com>"]
 license = "MIT"
 
 [tool.poetry.dependencies]
-python = "^3.7"
+python = ">=3.7,<3.10"
 # aiopg = "^0.16.0"
 attrs = "^19.1"
 aioauth-client = "^0.16.2"
@@ -16,6 +16,7 @@ aiohttp = "^3.8.3"
 django-environ = "^0.9.0"
 
 [tool.poetry.group.dev.dependencies]
+zappa = "^0.55.0"
 
 [build-system]
 requires = ["poetry-core>=1.0.0"]
