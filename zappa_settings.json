@@ -1,0 +1,13 @@
+{
+    "dev": {
+        "app_function": "app.main.run_app",
+        "aws_region": "us-west-1",
+        "profile_name": "old",
+        "project_name": "pr-review-notif",
+        "runtime": "python3.9",
+        "s3_bucket": "zappa-zp685ce22",
+        "environment_variables": {
+          "PORT": "80"
+        }
+    }
+}
